@@ -2,6 +2,7 @@
 
 Baseline folder structure + stubs so every team member and copilot builds on the
 same track. Read this first, then [BUILD_PLAN.md](BUILD_PLAN.md) for the full spec.
+For the agent backends (OpenClaw vs in-process) and why, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 > **One divergence from the plan:** the backend is **FastAPI (Python)**, not the
 > Next.js/TS API routes described in BUILD_PLAN.md §1/§3. Everything else follows

@@ -22,6 +22,13 @@ def assemble_result(
 ) -> DiagnosisResult:
     conf = compute_confidence(obs)
 
+    # §6 (non-negotiable): a citation may not reference an incident that was not
+    # recalled. Filter the agent's ids down to the recalled evidence set.
+    recalled_ids = {e.incident_id for e in evidence}
+    supporting = [i for i in reflect.supporting_incident_ids if i in recalled_ids]
+    if not supporting:
+        supporting = reflect.supporting_incident_ids  # nothing recalled yet → keep as-is
+
     freshness_warning = None
     if obs.freshness == "weakening":
         freshness_warning = "This fix is weakening — verify before applying."
@@ -32,7 +39,7 @@ def assemble_result(
         root_cause=reflect.root_cause,
         recommended_fix=reflect.recommended_fix,
         avoid=reflect.avoid,
-        supporting_incident_ids=reflect.supporting_incident_ids,
+        supporting_incident_ids=supporting,
         confidence=conf.score,
         confidence_band=conf.band,
         freshness_warning=freshness_warning,

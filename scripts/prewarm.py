@@ -3,19 +3,27 @@
 retain() all seed incidents BEFORE the demo so async consolidation produces
 observations + freshness trends. NEVER rely on live consolidation on stage.
 
-Usage:  python -m scripts.prewarm
+Run from the project root:  python -m scripts.prewarm
+(Works against the mock too — flip USE_MOCK_HINDSIGHT in .env.)
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import sys
 from pathlib import Path
 
-# Run from the project root so `app` is importable: python -m scripts.prewarm
-from backend.app.integration.memory import get_memory
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "backend"))  # use the same `app.*` imports as the server
 
-SEED_PATH = Path(__file__).resolve().parents[1] / "data" / "aftermath-seed.json"
+from dotenv import load_dotenv  # noqa: E402
+
+load_dotenv(ROOT / ".env")
+
+from app.integration.memory import get_memory  # noqa: E402
+
+SEED_PATH = ROOT / "data" / "aftermath-seed.json"
 
 
 async def main() -> None:
@@ -29,6 +37,7 @@ async def main() -> None:
                 "service": inc["service"],
                 "outcome": inc["outcome"],
                 "date": inc["date"],
+                "mttr_minutes": inc["mttr_minutes"],
             },
         )
         print(f"retained {inc['id']} ({inc['outcome']})")
