@@ -383,7 +383,7 @@ State is local React state (no browser storage). Data flows: form → `diagnoseI
 
 **Real:** the memory layer (Hindsight), the reasoning (Groq via `reflect`), the learning loop, confidence from real metadata, freshness from real consolidation.
 
-**Faked/Simulated (and that's fine):** the "infrastructure." There is no live monitoring feed — incidents are entered manually or replayed from the seed, and outcomes are marked by a human. The intelligence is real; the plumbing around it is staged. This is the correct trade for an 8-hour (here 5-hour) build: *fake the infrastructure, make the learning real.*
+**Faked/Simulated (and that's fine):** the "infrastructure." There is no live monitoring feed — incidents are entered manually or replayed from the seed, and outcomes are marked by a human. The intelligence is real; the plumbing around it is staged. *Fake the infrastructure, make the learning real.*
 
 ---
 

@@ -1,7 +1,7 @@
 # Aftermath — The On-Call Agent That Learns From Every Outage
 
 **HackVadodara '26 · Community Edition · Problem Statement 5 (Incident Response Agent)**
-**8-hour sprint · Built on Hindsight (required) · Working codename: _Aftermath_ (rename freely)**
+**Built on Hindsight (required) · Working codename: _Aftermath_ (rename freely)**
 
 > One-liner for judges: *"Most incident tools search old postmortems. Aftermath learns from them — it remembers every outage it has resolved, distills reusable mitigations, notices when a fix stops working, and gets measurably faster at diagnosis with every incident. Memory isn't a feature here. It's the product."*
 
@@ -50,7 +50,7 @@ The result: a generic assistant on Incident #1, a sharp domain expert by Inciden
 | **Deploy** | **Vercel** | One-command deploy; team is fluent. |
 | **Seed data** | JSON file of 4–6 pre-written incidents | The demo's backbone — written *before* any code. |
 
-> **Hour-0 dependency check:** provision Hindsight (Cloud or Docker) and run one `retain` + one `reflect` round-trip *before* building anything. If the dependency is flaky, you find out in minute 20, not hour 6.
+> **Dependency check first:** provision Hindsight (Cloud or Docker) and run one `retain` + one `reflect` round-trip *before* building anything. Find flaky dependencies early, not late.
 
 ---
 
@@ -166,17 +166,7 @@ Put **money and time on screen at all times** (MTTR clock + cost counter) so bus
 
 ---
 
-## 12. 8-Hour Build Plan
-
-| Window | Goal |
-|---|---|
-| **0:00–1:00** | Provision Hindsight (Cloud `MEMHACK6` or Docker); smoke-test `retain` + `reflect`; wire Groq. Write the 4–6 seed incidents (this *is* the demo). |
-| **1:00–2:00** | Configure bank (mission/disposition/directives). Retain seeds; let consolidation run → demo-ready bank with observations + freshness. |
-| **2:00–4:00** | Write path: outcome capture → `retain()` Experience Facts (incl. failures). Read path: `reflect()` → root cause + fix + citations + confidence. |
-| **4:00–5:30** | UI: diagnosis card, evidence panel, freshness badges, **memory ON/OFF toggle**, MTTR clock + cost counter. |
-| **5:30–6:30** | The live learning loop + failure-avoidance + freshness beats, end to end. |
-| **6:30–7:15** | Polish visuals; deploy to Vercel; load a backup local instance. |
-| **7:15–8:00** | Rehearse the demo to muscle memory. The demo is the deliverable. |
+## 12. Scope Discipline
 
 **Cut without mercy:** auth, multi-tenant, real monitoring/Slack integrations, custom graph DB. **Protect at all costs:** the closed loop, failure memory, freshness trend, and the rehearsed narration.
 
@@ -201,9 +191,9 @@ Each retained as an Experience Fact: `{ symptom, root_cause, fix, outcome (succe
 
 | Risk | Mitigation |
 |---|---|
-| Hindsight Cloud rate-limits / flakes mid-demo | Smoke-test in Hour 0; keep a Docker self-host as backup. |
+| Hindsight Cloud rate-limits / flakes mid-demo | Smoke-test early; keep a Docker self-host as backup. |
 | Async consolidation hasn't run at demo time | Pre-warm the bank during the build; never consolidate live on stage. |
-| Synthetic incidents feel fake | Write believable, specific seed data first; if it feels fake by Hour 1, that's the signal to reconsider the domain. |
+| Synthetic incidents feel fake | Write believable, specific seed data first; if it feels fake, that's the signal to reconsider the domain. |
 | Groq function-calling errors | Add retry/fallback to `qwen/qwen3-32b`; handle errors gracefully. |
 | Strong build, flat demo (our known failure mode) | Over-rehearse narration; keep money + time on screen throughout. |
 

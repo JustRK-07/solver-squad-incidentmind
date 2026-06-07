@@ -1,4 +1,4 @@
-# Aftermath / IncidentMind — Complete Build Plan
+# Aftermath / IncidentMind — Architecture & Integration Plan
 
 **One consolidated plan distilled from:** `aftermath-project-brief.md`, `aftermath-solution.md`, `aftermath-seed.json`, `Hackathon_Guide.md`, `README.md`.
 
@@ -199,18 +199,6 @@ directives:
 
 ---
 
-## 7. Build Timeline (8-hour sprint)
-
-| Window | Tier | Goal | Deliverable / Done-when |
-|---|---|---|---|
-| **0:00–1:00** | Integration | **Dependency check FIRST.** Provision Hindsight (Cloud `MEMHACK6` or Docker). Stand up OpenClaw + install Hindsight plugin. Wire OpenAI key. One `retain` + one `reflect` round-trip through OpenClaw. | Smoke test green. Seed file confirmed (✅ done). |
-| **1:00–2:00** | Integration | Configure OpenClaw bank (mission/disposition/directives §6). Run `scripts/prewarm.ts` → retain all 11 seeds → **let consolidation run.** | Bank has observations + freshness trends. |
-| **2:00–4:00** | Integration + Backend | `HindsightClient` + `AgentClient` interfaces + Mock + Real adapters. Backend endpoints: `outcome` (→ retain), `diagnose` (→ agent → confidence). | API returns a real `DiagnosisResult` w/ citations (curl test). |
-| **4:00–5:30** | Frontend | `IncidentForm` (+ toggle), `DiagnosisCard`, `EvidencePanel` (freshness badges), `ImpactBar` (MTTR clock + cost counter) wired to backend via `frontend/lib/api.ts`. | Single screen renders end-to-end. |
-| **5:30–6:30** | All | Wire the demo beats end-to-end: closed loop, failure-avoidance, weakening. | All 5 beats reproducible. |
-| **6:30–7:15** | All | Polish visuals. Deploy frontend+API to Vercel; confirm OpenClaw agent reachable. Load backup local instance + Mock fallback. | Live URL + local fallback both work. |
-| **7:15–8:00** | — | **Rehearse to muscle memory.** The demo is the deliverable. | Narration smooth, under time. |
-
 ---
 
 ## 8. The 3 Backend Endpoints (`backend/api/*`)
@@ -275,11 +263,11 @@ memory(pattern):
 
 ---
 
-## 12. Risks (Hour-0 mitigations)
+## 12. Risks & Mitigations
 
 | Risk | Mitigation |
 |---|---|
-| Hindsight Cloud flakes mid-demo | Smoke-test Hour 0; Docker self-host backup; Mock fallback. |
+| Hindsight Cloud flakes mid-demo | Smoke-test early; Docker self-host backup; Mock fallback. |
 | Consolidation hasn't run at demo time | Pre-warm during build; never consolidate live. |
 | Synthetic incidents feel fake | Seed is already specific/believable (✅). |
 | OpenAI errors | Retry + `gpt-4o-mini` fallback. |
