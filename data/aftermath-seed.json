@@ -1,0 +1,164 @@
+{
+  "meta": {
+    "project": "Aftermath - Incident Response Agent",
+    "today": "2026-06-07",
+    "note": "5 distinct incident types, 11 records. Rate-limit type repeats so Hindsight consolidates a 'weakening' observation. Retain each record as an Experience Fact (use retain_text). Pre-warm the bank with this BEFORE the demo; consolidation is async.",
+    "schema": "Core fields per brief: { symptom, root_cause, fix, outcome, mttr_minutes, date }. Extra fields (id, service, lesson, tags, retain_text) are helpers for retain + UI.",
+    "infrastructureChanges": [
+      {
+        "date": "2026-05-15",
+        "change": "Migrated ingress from legacy NGINX gateway to Envoy. Connection handling and rate-limit/shed rules now live at Envoy; legacy gateway shed rules became no-ops."
+      }
+    ],
+    "demoBeats": {
+      "closed_loop": ["INC-001", "INC-011"],
+      "failure_memory": ["INC-003", "INC-004"],
+      "weakening_trend": ["INC-005", "INC-006", "INC-007", "INC-008", "INC-009", "INC-010"]
+    }
+  },
+  "incidents": [
+    {
+      "id": "INC-001",
+      "service": "Payments API",
+      "symptom": "Payments API returning 503s; p99 latency over 8s; DB active connections pinned at max (100/100).",
+      "root_cause": "Connection pool exhausted - a slow analytics query held connections open with no statement timeout or backpressure.",
+      "fix": "Raised pool to 200, added 5s statement_timeout, added backpressure with a circuit breaker on the analytics path.",
+      "outcome": "success",
+      "mttr_minutes": 95,
+      "date": "2026-04-02",
+      "lesson": "503s with DB connections at max means pool exhaustion - add statement_timeout and backpressure, not just a bigger pool.",
+      "tags": ["database", "baseline"],
+      "retain_text": "On 2026-04-02 the Payments API returned 503s with p99 latency over 8s and DB connections pinned at 100/100. I diagnosed connection pool exhaustion caused by a slow analytics query holding connections with no timeout. I applied: raised the pool to 200, added a 5s statement_timeout, and added backpressure with a circuit breaker on the analytics path. Outcome: SUCCESS, resolved in 95 minutes."
+    },
+    {
+      "id": "INC-002",
+      "service": "API Gateway",
+      "symptom": "All HTTPS requests failing with SSL handshake errors across every service; clients see ERR_CERT_DATE_INVALID.",
+      "root_cause": "Wildcard TLS certificate expired; the auto-renewal cron had silently failed about 30 days earlier.",
+      "fix": "Rotated the cert manually, restored cert-manager auto-renewal, added an expiry alert at T-14 days.",
+      "outcome": "success",
+      "mttr_minutes": 40,
+      "date": "2026-04-18",
+      "lesson": "Mass handshake failures across all services means check certificate expiry first; alert before expiry, never after.",
+      "tags": ["tls", "baseline"],
+      "retain_text": "On 2026-04-18 all HTTPS requests across services failed with SSL handshake errors (ERR_CERT_DATE_INVALID). I diagnosed an expired wildcard TLS cert whose auto-renewal cron had silently failed. I applied: rotated the cert, restored cert-manager auto-renewal, and added a T-14-day expiry alert. Outcome: SUCCESS, resolved in 40 minutes."
+    },
+    {
+      "id": "INC-003",
+      "service": "Recommendation Worker",
+      "symptom": "Recommendation worker pods OOMKilled in a loop; job queue backing up; pods in CrashLoopBackOff.",
+      "root_cause": "Memory leak in an unbounded in-memory embedding cache.",
+      "fix": "Restarted the pods to clear memory.",
+      "outcome": "failure",
+      "mttr_minutes": 60,
+      "date": "2026-04-25",
+      "lesson": "Restarting an OOMKilled worker that has a leak only delays the next crash and masks the root cause. Do NOT just restart.",
+      "tags": ["memory", "failure-memory"],
+      "retain_text": "On 2026-04-25 the Recommendation Worker pods were OOMKilled in a loop with the queue backing up. I tried: restarting the pods to clear memory. Outcome: FAILURE - the pods OOMKilled again within minutes because the underlying memory leak remained. Lesson: do not just restart an OOMKilled worker with a leak; it masks the root cause."
+    },
+    {
+      "id": "INC-004",
+      "service": "Recommendation Worker",
+      "symptom": "Recommendation worker pods OOMKilled in a loop (recurrence); job queue backing up.",
+      "root_cause": "Unbounded in-memory embedding cache growing without limit (the leak from INC-003).",
+      "fix": "Bounded the cache with an LRU (max 10k entries), set container memory request/limit, fixed the leak, added a memory alert at 80%.",
+      "outcome": "success",
+      "mttr_minutes": 110,
+      "date": "2026-04-26",
+      "lesson": "OOMKill in a worker - cap the cache with an LRU, set memory limits, and fix the leak. Restart is not a fix.",
+      "tags": ["memory", "real-fix"],
+      "retain_text": "On 2026-04-26 the Recommendation Worker pods were OOMKilled again. I diagnosed an unbounded in-memory embedding cache leaking memory. I applied: bounded the cache with an LRU (max 10k), set container memory request/limit, fixed the leak, and added an 80% memory alert. Outcome: SUCCESS, resolved in 110 minutes. This replaced the failed restart approach from the prior incident."
+    },
+    {
+      "id": "INC-005",
+      "service": "Auth Service",
+      "symptom": "Login latency spike with cascading 429s during a traffic surge; client retries amplifying load.",
+      "root_cause": "No load shedding; retry storm; cold token cache.",
+      "fix": "Enabled load shedding at the legacy gateway, warmed the token cache, added jittered backoff on clients.",
+      "outcome": "success",
+      "mttr_minutes": 60,
+      "date": "2026-04-08",
+      "lesson": "Auth 429 cascade during a surge - shed load, warm the cache, add jittered backoff.",
+      "tags": ["rate-limit", "shed-cache", "pre-migration"],
+      "retain_text": "On 2026-04-08 the Auth Service had a login latency spike with cascading 429s during a traffic surge, amplified by client retries. I diagnosed no load shedding plus a retry storm and a cold token cache. I applied: enabled load shedding at the legacy gateway, warmed the token cache, and added jittered backoff. Outcome: SUCCESS, resolved in 60 minutes."
+    },
+    {
+      "id": "INC-006",
+      "service": "Auth Service",
+      "symptom": "Login 429 cascade during a traffic surge; latency climbing.",
+      "root_cause": "Surge with no shedding; cold token cache.",
+      "fix": "Enabled load shedding at the legacy gateway, warmed the token cache, jittered backoff.",
+      "outcome": "success",
+      "mttr_minutes": 35,
+      "date": "2026-04-22",
+      "lesson": "Same shed + warm-cache + backoff playbook resolves the Auth 429 cascade.",
+      "tags": ["rate-limit", "shed-cache", "pre-migration"],
+      "retain_text": "On 2026-04-22 the Auth Service hit a login 429 cascade during a surge. I applied the known playbook: load shedding at the legacy gateway, warmed token cache, jittered backoff. Outcome: SUCCESS, resolved in 35 minutes - faster than last time."
+    },
+    {
+      "id": "INC-007",
+      "service": "Auth Service",
+      "symptom": "429 cascade on login during peak traffic.",
+      "root_cause": "Surge with no shedding active.",
+      "fix": "Load shedding at the legacy gateway, warmed token cache, jittered backoff.",
+      "outcome": "success",
+      "mttr_minutes": 25,
+      "date": "2026-05-05",
+      "lesson": "Shed + warm-cache + backoff is the reliable Auth surge playbook.",
+      "tags": ["rate-limit", "shed-cache", "pre-migration"],
+      "retain_text": "On 2026-05-05 the Auth Service hit a 429 cascade at peak traffic. I applied the established playbook: shed at the legacy gateway, warm cache, jittered backoff. Outcome: SUCCESS, resolved in 25 minutes."
+    },
+    {
+      "id": "INC-008",
+      "service": "Auth Service",
+      "symptom": "Login 429 cascade during a surge.",
+      "root_cause": "Surge, no shedding active.",
+      "fix": "Load shedding at the legacy gateway, warmed token cache, jittered backoff.",
+      "outcome": "success",
+      "mttr_minutes": 20,
+      "date": "2026-05-12",
+      "lesson": "Playbook is now well-proven for the Auth 429 cascade (4th success).",
+      "tags": ["rate-limit", "shed-cache", "pre-migration"],
+      "retain_text": "On 2026-05-12 the Auth Service hit a 429 cascade during a surge. I applied the proven playbook: shed at the legacy gateway, warm cache, jittered backoff. Outcome: SUCCESS, resolved in 20 minutes. This mitigation has now worked 4 times."
+    },
+    {
+      "id": "INC-009",
+      "service": "Auth Service",
+      "symptom": "Login 429 cascade during a surge; load shedding NOT engaging like before.",
+      "root_cause": "After the 2026-05-15 Envoy ingress migration, the legacy-gateway shed rule is a no-op; shedding must now be configured at Envoy.",
+      "fix": "Applied the old playbook: load shedding at the legacy gateway, warmed cache, jittered backoff.",
+      "outcome": "failure",
+      "mttr_minutes": 130,
+      "date": "2026-05-28",
+      "lesson": "Post-Envoy-migration the legacy shed rule does nothing. The old playbook is starting to FAIL - shedding must move to Envoy.",
+      "tags": ["rate-limit", "shed-cache", "weakening", "post-migration"],
+      "retain_text": "On 2026-05-28 the Auth Service hit a 429 cascade but load shedding did not engage as it used to. I applied the old playbook (shed at the legacy gateway, warm cache, backoff). Outcome: FAILURE - shedding did not take effect. Root cause: after the 2026-05-15 Envoy ingress migration, the legacy gateway shed rule is a no-op and shedding must be configured at Envoy. The old playbook is no longer reliable."
+    },
+    {
+      "id": "INC-010",
+      "service": "Auth Service",
+      "symptom": "429 cascade on login during a surge; shedding again not engaging.",
+      "root_cause": "Legacy-gateway shed rule still a no-op post-Envoy-migration.",
+      "fix": "Tried the old playbook again (legacy gateway shed); also began moving shed config to Envoy.",
+      "outcome": "failure",
+      "mttr_minutes": 90,
+      "date": "2026-06-03",
+      "lesson": "Confirmed: the legacy shed playbook is dead post-migration. Move shedding to Envoy. This is the 2nd failure since the migration.",
+      "tags": ["rate-limit", "shed-cache", "weakening", "post-migration"],
+      "retain_text": "On 2026-06-03 the Auth Service hit another 429 cascade and the legacy shed rule again did not engage. I tried the old playbook (legacy gateway shed) - Outcome: FAILURE for the second time since the Envoy migration. Confirmed the legacy shed rule is a no-op; shedding must be configured at Envoy. The shed-at-legacy-gateway mitigation is now unreliable."
+    },
+    {
+      "id": "INC-011",
+      "service": "Orders API",
+      "symptom": "Users see stale order status immediately after placing an order; read replica lag spiked to 12s.",
+      "root_cause": "Critical read-after-write was routed to a lagging read replica.",
+      "fix": "Routed read-after-write and other critical reads to the primary; added a replica-lag alert at over 2s.",
+      "outcome": "success",
+      "mttr_minutes": 50,
+      "date": "2026-05-20",
+      "lesson": "Stale reads right after writes - route critical reads to the primary and alert on replica lag.",
+      "tags": ["database", "replication"],
+      "retain_text": "On 2026-05-20 Orders API users saw stale order status right after placing orders, with read replica lag at 12s. I diagnosed a read-after-write routed to a lagging replica. I applied: routed critical reads to the primary and added a replica-lag alert above 2s. Outcome: SUCCESS, resolved in 50 minutes."
+    }
+  ]
+}

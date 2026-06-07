@@ -1,0 +1,60 @@
+/* ── FRONTEND ── design tokens (BUILD_PLAN.md Part II §2)
+   0.5px borders · radius-lg cards · no gradients/shadows · sentence case ·
+   two font weights (400/500) · semantic status colors · blue similarity ramp.
+   Dark-mode safe — tokens flip via prefers-color-scheme. */
+
+:root {
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --border: rgba(0, 0, 0, 0.12);
+  --text: #1a1a1a;
+  --muted: #6b7280;
+  --radius-lg: 12px;
+
+  --danger-bg: #fde8e8;  --danger-fg: #9b1c1c;
+  --success-bg: #e6f4ea; --success-fg: #1e6b3a;
+  --warning-bg: #fef3c7; --warning-fg: #92560a;
+  --info: #0c447c;
+
+  --pill-bg: #e6f1fb;    --pill-fg: #0c447c;  /* similarity / provenance */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --surface: #171a21;
+    --border: rgba(255, 255, 255, 0.14);
+    --text: #e6e8eb;
+    --muted: #9aa0a6;
+    --pill-bg: #11233a; --pill-fg: #7fb3ee;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.card {
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 16px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  background: var(--pill-bg);
+  color: var(--pill-fg);
+}
