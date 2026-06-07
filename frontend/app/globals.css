@@ -1,60 +1,78 @@
-/* ── FRONTEND ── design tokens (BUILD_PLAN.md Part II §2)
-   0.5px borders · radius-lg cards · no gradients/shadows · sentence case ·
-   two font weights (400/500) · semantic status colors · blue similarity ramp.
-   Dark-mode safe — tokens flip via prefers-color-scheme. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* ── design tokens (mirrors standalone.html :root) ─────────────── */
 :root {
+  color-scheme: light;
   --bg: #ffffff;
-  --surface: #f7f8fa;
-  --border: rgba(0, 0, 0, 0.12);
-  --text: #1a1a1a;
-  --muted: #6b7280;
+  --surface: #ffffff;
+  --surface-accent: #fef3c7;
+  --surface-muted: #f9fafb;
+  --border: 0 0% 0% / 0.10;            /* rgba(0,0,0,0.10) */
+  --text: 0 0% 10%;                    /* #1a1a1a */
+  --muted: 0 0% 42%;                   /* #6b7280 */
+  --info: 212 100% 27%;                /* #0c447c */
+  --link: 217 91% 60%;                 /* #2563eb */
+  --danger-bg: 0 86% 96%;              /* #fde8e8 */
+  --danger-fg: 0 74% 36%;              /* #9b1c1c */
+  --success-bg: 134 62% 92%;           /* #e6f4ea */
+  --success-fg: 134 67% 27%;           /* #1e6b3a */
+  --warning-bg: 46 96% 89%;            /* #fef3c7 */
+  --warning-fg: 36 89% 32%;            /* #92560a */
   --radius-lg: 12px;
 
-  --danger-bg: #fde8e8;  --danger-fg: #9b1c1c;
-  --success-bg: #e6f4ea; --success-fg: #1e6b3a;
-  --warning-bg: #fef3c7; --warning-fg: #92560a;
-  --info: #0c447c;
-
-  --pill-bg: #e6f1fb;    --pill-fg: #0c447c;  /* similarity / provenance */
+  /* HSL-only accessors used by shadcn / Tailwind */
+  --bg: 0 0% 100%;
 }
 
-@media (prefers-color-scheme: dark) {
+/* HSL form for tokens above (Tailwind hsl(var(--x)) expects this format) */
+@layer base {
   :root {
-    --bg: #0f1115;
-    --surface: #171a21;
-    --border: rgba(255, 255, 255, 0.14);
-    --text: #e6e8eb;
-    --muted: #9aa0a6;
-    --pill-bg: #11233a; --pill-fg: #7fb3ee;
+    --bg: 0 0% 100%;
+    --surface: 0 0% 100%;
+    --surface-accent: 46 96% 89%;
+    --surface-muted: 0 0% 98%;
+    --text: 0 0% 10%;
+    --muted: 0 0% 42%;
+    --info: 212 100% 27%;
+    --link: 217 91% 60%;
+    --danger-bg: 0 86% 96%;
+    --danger-fg: 0 74% 36%;
+    --success-bg: 134 62% 92%;
+    --success-fg: 134 67% 27%;
+    --warning-bg: 46 96% 89%;
+    --warning-fg: 36 89% 32%;
+    --border: 0 0% 0% / 0.18;
   }
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
+html,
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  padding: 0;
+}
+
+body {
+  background: hsl(var(--bg));
+  color: hsl(var(--text));
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
+  line-height: 1.45;
+  min-height: 100vh;
 }
 
-.card {
-  border: 0.5px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  padding: 16px;
-}
-
-.pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  background: var(--pill-bg);
-  color: var(--pill-fg);
+@layer utilities {
+  .border-hairline {
+    border-style: solid;
+    border-width: 0.5px;
+  }
+  .text-muted-foreground {
+    color: hsl(var(--muted));
+  }
 }
